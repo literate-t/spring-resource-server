@@ -7,7 +7,6 @@ import io.security.springresourceserver.dto.LoginDto;
 import io.security.springresourceserver.signature.SecuritySigner;
 import java.io.IOException;
 import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -51,7 +50,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
   // issue a token
   @Override
   protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
-      FilterChain chain, Authentication authResult) throws IOException, ServletException {
+      FilterChain chain, Authentication authResult) {
 
     User user = (User) authResult.getPrincipal();
     String jwtToken;
@@ -59,7 +58,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     try {
       jwtToken = securitySigner.getJwtToken(user, jwk);
       response.addHeader("Authorization", "Bearer " + jwtToken);
-      
+
     } catch (JOSEException e) {
       throw new RuntimeException(e);
     }

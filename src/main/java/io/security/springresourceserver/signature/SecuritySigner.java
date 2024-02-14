@@ -10,6 +10,7 @@ import com.nimbusds.jwt.SignedJWT;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 public abstract class SecuritySigner {
@@ -21,7 +22,7 @@ public abstract class SecuritySigner {
     JWSHeader header = new JWSHeader.Builder((JWSAlgorithm) jwk.getAlgorithm()).keyID(
         jwk.getKeyID()).build();
 
-    List<String> authorities = user.getAuthorities().stream().map(auth -> auth.getAuthority())
+    List<String> authorities = user.getAuthorities().stream().map(GrantedAuthority::getAuthority)
         .collect(Collectors.toList());
     JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
         .subject("user")
