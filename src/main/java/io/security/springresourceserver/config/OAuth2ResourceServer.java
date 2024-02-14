@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -46,8 +47,10 @@ public class OAuth2ResourceServer {
     http.userDetailsService(userDetailsService());
     http.addFilterBefore(jwtAuthenticationFilter(rsaSecuritySigner, rsaKey),
         UsernamePasswordAuthenticationFilter.class);
-    http.addFilterBefore(jwtAuthorizationRsaFilter(rsaKey),
-        UsernamePasswordAuthenticationFilter.class);
+    // 내부적으로 JwtConfigurer 객체에서 JwtDecoder를 가져와서 처리한다
+    http.oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt);
+//    http.addFilterBefore(jwtAuthorizationRsaFilter(rsaKey),
+//        UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
   }
