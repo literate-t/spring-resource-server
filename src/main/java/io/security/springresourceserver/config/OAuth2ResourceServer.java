@@ -1,6 +1,9 @@
 package io.security.springresourceserver.config;
 
+import com.nimbusds.jose.jwk.OctetSequenceKey;
 import io.security.springresourceserver.filter.authentication.JwtAuthenticationFilter;
+import io.security.springresourceserver.filter.authorization.JwtAuthorizationMacFilter;
+import io.security.springresourceserver.signature.MacSecuritySigner;
 import javax.servlet.Filter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -22,7 +25,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class OAuth2ResourceServer {
   private final AuthenticationConfiguration authenticationConfiguration;
-  
+  private final MacSecuritySigner macSecuritySigner;
+  private final OctetSequenceKey octetSequenceKey;
+
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     // token으로 검증하는 것이기 때문에
@@ -31,9 +36,17 @@ public class OAuth2ResourceServer {
 
     http.authorizeRequests(registry -> registry.antMatchers("/").permitAll());
     http.userDetailsService(userDetailsService());
-    http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+    http.addFilterBefore(jwtAuthenticationFilter(macSecuritySigner, octetSequenceKey),
+        UsernamePasswordAuthenticationFilter.class);
+    http.addFilterBefore(jwtAuthorizationMacFilter(octetSequenceKey),
+        UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
+  }
+
+  @Bean
+  public JwtAuthorizationMacFilter jwtAuthorizationMacFilter(OctetSequenceKey octetSequenceKey) {
+    return new JwtAuthorizationMacFilter(octetSequenceKey);
   }
 
   @Bean
@@ -44,9 +57,11 @@ public class OAuth2ResourceServer {
   }
 
   @Bean
-  public Filter jwtAuthenticationFilter() throws Exception {
+  public Filter jwtAuthenticationFilter(MacSecuritySigner macSecuritySigner,
+      OctetSequenceKey octetSequenceKey) throws Exception {
     // 최상위 부모가 AbstractAuthenticationProcessingFilter인데 여기에서 Authentication Manager를 요청
-    JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter();
+    JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(macSecuritySigner,
+        octetSequenceKey);
     jwtAuthenticationFilter.setAuthenticationManager(authenticationManager(authenticationConfiguration));
 
     return jwtAuthenticationFilter;
