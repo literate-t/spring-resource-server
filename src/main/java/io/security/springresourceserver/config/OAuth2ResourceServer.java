@@ -1,9 +1,15 @@
 package io.security.springresourceserver.config;
 
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.crypto.RSASSAVerifier;
+import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.OctetSequenceKey;
+import com.nimbusds.jose.jwk.RSAKey;
 import io.security.springresourceserver.filter.authentication.JwtAuthenticationFilter;
-import io.security.springresourceserver.filter.authorization.JwtAuthorizationMacFilter;
+import io.security.springresourceserver.filter.authorization.JwtAuthorizationRsaFilter;
 import io.security.springresourceserver.signature.MacSecuritySigner;
+import io.security.springresourceserver.signature.RsaSecuritySigner;
+import io.security.springresourceserver.signature.SecuritySigner;
 import javax.servlet.Filter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -11,7 +17,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -28,6 +33,8 @@ public class OAuth2ResourceServer {
   private final AuthenticationConfiguration authenticationConfiguration;
   private final MacSecuritySigner macSecuritySigner;
   private final OctetSequenceKey octetSequenceKey;
+  private final RsaSecuritySigner rsaSecuritySigner;
+  private final RSAKey rsaKey;
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -37,18 +44,23 @@ public class OAuth2ResourceServer {
 
     http.authorizeRequests(registry -> registry.antMatchers("/").permitAll());
     http.userDetailsService(userDetailsService());
-    http.addFilterBefore(jwtAuthenticationFilter(macSecuritySigner, octetSequenceKey),
+    http.addFilterBefore(jwtAuthenticationFilter(rsaSecuritySigner, rsaKey),
         UsernamePasswordAuthenticationFilter.class);
-    http.oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt); // JwtDecoderConfig에 정의한 내용을 적용
-//    http.addFilterBefore(jwtAuthorizationMacFilter(octetSequenceKey),
-//        UsernamePasswordAuthenticationFilter.class);
+    http.addFilterBefore(jwtAuthorizationRsaFilter(rsaKey),
+        UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
   }
 
+//  @Bean
+//  public JwtAuthorizationMacFilter jwtAuthorizationMacFilter(OctetSequenceKey octetSequenceKey)
+//      throws JOSEException {
+//    return new JwtAuthorizationMacFilter(new MACVerifier(octetSequenceKey.toSecretKey()));
+//  }
+
   @Bean
-  public JwtAuthorizationMacFilter jwtAuthorizationMacFilter(OctetSequenceKey octetSequenceKey) {
-    return new JwtAuthorizationMacFilter(octetSequenceKey);
+  public JwtAuthorizationRsaFilter jwtAuthorizationRsaFilter(RSAKey rsakey) throws JOSEException {
+    return new JwtAuthorizationRsaFilter(new RSASSAVerifier(rsakey.toRSAPublicKey()));
   }
 
   @Bean
@@ -58,12 +70,11 @@ public class OAuth2ResourceServer {
     return authenticationConfiguration.getAuthenticationManager();
   }
 
-  @Bean
-  public Filter jwtAuthenticationFilter(MacSecuritySigner macSecuritySigner,
-      OctetSequenceKey octetSequenceKey) throws Exception {
+  public Filter jwtAuthenticationFilter(SecuritySigner securitySigner,
+      JWK key) throws Exception {
     // 최상위 부모가 AbstractAuthenticationProcessingFilter인데 여기에서 Authentication Manager를 요청
-    JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(macSecuritySigner,
-        octetSequenceKey);
+    JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(securitySigner,
+        key);
     jwtAuthenticationFilter.setAuthenticationManager(authenticationManager(authenticationConfiguration));
 
     return jwtAuthenticationFilter;
