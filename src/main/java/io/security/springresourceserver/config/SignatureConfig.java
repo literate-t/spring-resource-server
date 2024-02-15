@@ -7,6 +7,7 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.gen.OctetSequenceKeyGenerator;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import io.security.springresourceserver.signature.MacSecuritySigner;
+import io.security.springresourceserver.signature.RsaPublicKeySecuritySigner;
 import io.security.springresourceserver.signature.RsaSecuritySigner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,7 +38,12 @@ public class SignatureConfig {
   public RSAKey rsaKey() throws JOSEException {
     return new RSAKeyGenerator(2048)
         .keyID("rsaKey")
-        .algorithm(JWSAlgorithm.RS512)
+        .algorithm(JWSAlgorithm.RS256)
         .generate();
+  }
+
+  @Bean
+  public RsaPublicKeySecuritySigner rsaPublicKeySecuritySigner() {
+    return new RsaPublicKeySecuritySigner();
   }
 }
