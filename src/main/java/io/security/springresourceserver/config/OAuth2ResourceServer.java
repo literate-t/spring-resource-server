@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,7 +26,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @RequiredArgsConstructor
@@ -46,14 +46,17 @@ public class OAuth2ResourceServer {
 
     http.authorizeRequests(registry -> registry.antMatchers("/").permitAll());
     http.userDetailsService(userDetailsService());
-    http.addFilterBefore(jwtAuthenticationFilter(rsaPublicKeySecuritySigner, rsaKey),
-        UsernamePasswordAuthenticationFilter.class);
+//    http.addFilterBefore(jwtAuthenticationFilter(rsaPublicKeySecuritySigner, rsaKey),
+//        UsernamePasswordAuthenticationFilter.class);
+
     // 내부적으로 JwtConfigurer 객체에서 JwtDecoder를 가져와서 처리한다
-//    http.oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt);
+    // Spring에게 맡기기
+    // application.yml에 jwk-set-uri을 설정함
+    http.oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt);
 //    http.addFilterBefore(jwtAuthorizationRsaFilter(rsaKey),
 //        UsernamePasswordAuthenticationFilter.class);
-    http.addFilterBefore(jwtAuthorizationRsaPublicKeyFilter(jwtDecoder),
-        UsernamePasswordAuthenticationFilter.class);
+//    http.addFilterBefore(jwtAuthorizationRsaPublicKeyFilter(jwtDecoder),
+//        UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
   }
