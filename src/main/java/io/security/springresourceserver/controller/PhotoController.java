@@ -30,4 +30,14 @@ public class PhotoController {
         .title("photo2 title")
         .build();
   }
+
+  @GetMapping("/photos/3")
+  public Photo photo3() {
+    return Photo.builder()
+        .userId("user2")
+        .id("2")
+        .description("photo 2 desc")
+        .title("photo2 title")
+        .build();
+  }
 }
