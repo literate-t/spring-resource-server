@@ -1,4 +1,4 @@
-package entity;
+package io.oauth2.client.oauth2client.entity;
 
 import lombok.Getter;
 import lombok.Setter;
