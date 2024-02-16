@@ -29,9 +29,9 @@
       response.json().then((data) => {
         for (const prop in data) {
           document.querySelector("#remotePhotos").append(data[prop].userId);
-          document.querySelector("#remotePhotos").append(data[prop].photoId);
-          document.querySelector("#remotePhotos").append(data[prop].photoTitle);
-          document.querySelector("#remotePhotos").append(data[prop].photoDescription);
+          document.querySelector("#remotePhotos").append(data[prop].id);
+          document.querySelector("#remotePhotos").append(data[prop].title);
+          document.querySelector("#remotePhotos").append(data[prop].description);
           document.querySelector("#remotePhotos").append(document.createElement('br'));
         }
       })
@@ -50,9 +50,9 @@
       response.json().then((data) => {
         for (const prop in data) {
           document.querySelector("#photos").append(data[prop].userId);
-          document.querySelector("#photos").append(data[prop].photoId);
-          document.querySelector("#photos").append(data[prop].photoTitle);
-          document.querySelector("#photos").append(data[prop].photoDescription);
+          document.querySelector("#photos").append(data[prop].id);
+          document.querySelector("#photos").append(data[prop].title);
+          document.querySelector("#photos").append(data[prop].description);
           document.querySelector("#photos").append(document.createElement('br'));
         }
       })
